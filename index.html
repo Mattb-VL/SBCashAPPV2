@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Cashout Calculator</title>
+<title>Sandbar Cashout</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
 
@@ -1044,9 +1044,12 @@ function calculate() {
   if (!serverValid) { showToast('Please fill in all required fields', 'error'); return; }
 
   // Core tip-out calculations
-  const house        = roundHalfUp(totalSales * 0.035);
-  const busser       = roundHalfUp(totalSales * 0.01);
-  const bar          = sharedBartOn ? 0 : roundHalfUp(totalSales * 0.01);
+  // Bar cashouts: house & busser based on S-Food (sFoodTipPool), no bar tip-out
+  // Server cashouts: house & busser based on total sales, bar tip-out applies
+  const houseBase    = isBarType ? sFoodTipPool : totalSales;
+  const house        = roundHalfUp(houseBase * 0.035);
+  const busser       = roundHalfUp(houseBase * 0.01);
+  const bar          = isBarType ? 0 : (sharedBartOn ? 0 : roundHalfUp(totalSales * 0.01));
   const expo         = roundHalfUp(foodSales * 0.015);
   const events       = beoSales > 0 ? roundHalfUp(beoSales * 0.01) : 0;
   const totalTipOut  = roundHalfUp(house + busser + bar + expo + events);
