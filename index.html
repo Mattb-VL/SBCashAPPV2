@@ -229,6 +229,27 @@
   .negative { color: var(--red); }
   .accent   { color: var(--accent); }
 
+  /* Editable tip-out inputs */
+  .tipout-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed transparent;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: right;
+    width: 84px;
+    padding: 2px 0;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+  }
+  .tipout-input::-webkit-inner-spin-button,
+  .tipout-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .tipout-input:focus { border-bottom: 1px dashed var(--accent); }
+  .tipout-input.accent { color: var(--accent); }
+
   /* Cashout banners */
   .cashout-banner {
     border-radius: var(--radius);
@@ -249,9 +270,9 @@
     font-family: 'Syne', sans-serif;
   }
   .cashout-banner .banner-amount {
-    font-family: 'Syne', sans-serif;
+    font-family: 'DM Mono', monospace;
     font-size: 36px;
-    font-weight: 800;
+    font-weight: 500;
     letter-spacing: -0.02em;
   }
   .cashout-banner.owe     .banner-amount { color: var(--red); }
@@ -297,9 +318,9 @@
   .submit-btn {
     width: 100%;
     padding: 16px;
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
+    background: var(--red);
+    color: #fff;
+    border: none;
     border-radius: var(--radius);
     font-family: 'Syne', sans-serif;
     font-weight: 700;
@@ -308,10 +329,20 @@
     cursor: pointer;
     transition: all 0.15s;
     margin-top: 4px;
+    line-height: 1.4;
+    white-space: normal;
   }
-  .submit-btn:hover  { border-color: var(--accent); color: var(--accent); }
+  .submit-btn:hover  { opacity: 0.88; }
   .submit-btn:active { transform: scale(0.98); }
   .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .submit-btn .btn-sub {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
 
   /* Toast */
   .toast {
@@ -610,23 +641,23 @@
     <div class="result-card" id="tipOutCard">
       <div class="result-row">
         <span class="label">House (3.5%)</span>
-        <span class="value accent" id="r_house">—</span>
+        <input type="number" class="tipout-input accent" id="r_house" step="0.01" min="0" placeholder="0.00">
       </div>
       <div class="result-row">
         <span class="label">Busser (1%)</span>
-        <span class="value" id="r_busser">—</span>
+        <input type="number" class="tipout-input" id="r_busser" step="0.01" min="0" placeholder="0.00">
       </div>
       <div class="result-row">
         <span class="label">Bar (1%)</span>
-        <span class="value" id="r_bar">—</span>
+        <input type="number" class="tipout-input" id="r_bar" step="0.01" min="0" placeholder="0.00">
       </div>
       <div class="result-row">
         <span class="label">Expo (1.5% food)</span>
-        <span class="value" id="r_expo">—</span>
+        <input type="number" class="tipout-input" id="r_expo" step="0.01" min="0" placeholder="0.00">
       </div>
       <div class="result-row" id="r_eventsRow" style="display:none">
         <span class="label">Events (1% BEO)</span>
-        <span class="value" id="r_events">—</span>
+        <input type="number" class="tipout-input" id="r_events" step="0.01" min="0" placeholder="0.00">
       </div>
       <div class="result-row total">
         <span class="label" style="color:var(--text)">Total Tip-Out</span>
@@ -665,7 +696,7 @@
     <div id="splitResults"></div>
 
     <button class="submit-btn" id="submitBtn" onclick="submitCashout()">
-      Submit to Google Sheets
+      Submit Cashout
     </button>
     <span class="reset-link" onclick="resetForm()">Start new cashout</span>
   </div>
@@ -1009,20 +1040,26 @@ function calculate() {
   const totalTipOut  = roundHalfUp(house + busser + bar + expo + events);
   const finalAmount  = roundHalfUp(netCash + totalTipOut);
 
+  // Reset submit button text (in case a previous run had custom amounts)
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Submit Cashout';
+
   // Tip-out display
   document.getElementById('tipOutLabel').style.display   = 'block';
   document.getElementById('tipOutCard').style.display    = 'block';
   document.getElementById('sushiDistCard').style.display = 'none';
-  document.getElementById('r_house').textContent      = fmt(house);
-  document.getElementById('r_busser').textContent     = fmt(busser);
-  document.getElementById('r_bar').textContent        = fmt(bar);
-  document.getElementById('r_expo').textContent       = fmt(expo);
+  document.getElementById('r_house').value  = house.toFixed(2);
+  document.getElementById('r_busser').value = busser.toFixed(2);
+  document.getElementById('r_bar').value    = bar.toFixed(2);
+  document.getElementById('r_expo').value   = expo.toFixed(2);
   document.getElementById('r_totalTipOut').textContent = fmt(totalTipOut);
   if (events > 0) {
     document.getElementById('r_eventsRow').style.display = 'flex';
-    document.getElementById('r_events').textContent = fmt(events);
+    document.getElementById('r_events').value = events.toFixed(2);
   } else {
     document.getElementById('r_eventsRow').style.display = 'none';
+    document.getElementById('r_events').value = '0';
   }
 
   // Per-person shares
@@ -1066,9 +1103,8 @@ function calculate() {
     banner.className = 'cashout-banner ' + (isDueback ? 'dueback' : 'owe');
     document.getElementById('bannerLabel').textContent  = isDueback ? 'You are owed (Dueback)' : 'You owe the house';
     document.getElementById('bannerAmount').textContent = fmt(finalAmount);
-    document.getElementById('bannerSub').textContent    = isDueback
-      ? `Net cash ${fmt(netCash)} + tip-out ${fmt(totalTipOut)}`
-      : `Net cash $${Math.abs(netCash).toFixed(2)} + tip-out ${fmt(totalTipOut)}`;
+    const netCashFmt = netCash < 0 ? `-$${Math.abs(netCash).toFixed(2)}` : `$${netCash.toFixed(2)}`;
+    document.getElementById('bannerSub').textContent = `(tip-out $${totalTipOut.toFixed(2)} + Net cash ${netCashFmt})`;
   } else {
     document.getElementById('singleResult').style.display = 'none';
     const splitDiv = document.getElementById('splitResults');
@@ -1185,7 +1221,7 @@ function resetForm() {
   document.getElementById('section').value = '';
   document.getElementById('results').style.display = 'none';
   document.getElementById('submitBtn').disabled = false;
-  document.getElementById('submitBtn').textContent = 'Submit to Google Sheets';
+  document.getElementById('submitBtn').textContent = 'Submit Cashout';
 
   // Reset field visibility
   document.getElementById('sushiNamesField').style.display       = 'none';
@@ -1337,6 +1373,68 @@ function toggleSushiTeamHours() {
 function addSushiTeamHoursEntry() {
   document.getElementById('sushiTeamHoursInputs')
     .appendChild(createCustomHoursRow('', 'sushi-team-hrs-name', 'sushi-team-hrs-val'));
+}
+
+// ── TIPOUT OVERRIDE ───────────────────────────────────────────────────────────
+['r_house','r_busser','r_bar','r_expo','r_events'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function () {
+    const btn = document.getElementById('submitBtn');
+    if (!btn.disabled && btn.innerHTML.indexOf('Submitted') === -1) {
+      btn.innerHTML = 'Submit Cashout<span class="btn-sub">With Custom Amounts</span>';
+    }
+    recalcFromTipouts();
+  });
+});
+
+function recalcFromTipouts() {
+  if (!calcData || calcData.isSushiType) return;
+
+  const house       = parseFloat(document.getElementById('r_house').value)  || 0;
+  const busser      = parseFloat(document.getElementById('r_busser').value) || 0;
+  const bar         = parseFloat(document.getElementById('r_bar').value)    || 0;
+  const expo        = parseFloat(document.getElementById('r_expo').value)   || 0;
+  const events      = parseFloat(document.getElementById('r_events').value) || 0;
+  const totalTipOut = roundHalfUp(house + busser + bar + expo + events);
+  const finalAmount = roundHalfUp(calcData.netCash + totalTipOut);
+
+  document.getElementById('r_totalTipOut').textContent = fmt(totalTipOut);
+
+  // Update calcData so submitCashout() picks up the overridden values
+  Object.assign(calcData, { house, busser, bar, expo, events, totalTipOut, finalAmount });
+  calcData.persons = calcData.persons.map(p => ({
+    ...p, finalAmount: roundHalfUp(finalAmount * p.share)
+  }));
+
+  const netCashFmt = calcData.netCash < 0
+    ? `-$${Math.abs(calcData.netCash).toFixed(2)}`
+    : `$${calcData.netCash.toFixed(2)}`;
+
+  if (calcData.persons.length === 1) {
+    const isDueback = finalAmount < 0;
+    document.getElementById('cashoutBanner').className = 'cashout-banner ' + (isDueback ? 'dueback' : 'owe');
+    document.getElementById('bannerLabel').textContent  = isDueback ? 'You are owed (Dueback)' : 'You owe the house';
+    document.getElementById('bannerAmount').textContent = fmt(finalAmount);
+    document.getElementById('bannerSub').textContent    = `(tip-out $${totalTipOut.toFixed(2)} + Net cash ${netCashFmt})`;
+  } else {
+    const splitDiv = document.getElementById('splitResults');
+    splitDiv.innerHTML = '<div class="section-label">Per Person</div>';
+    calcData.persons.forEach(p => {
+      const isDueback = p.finalAmount < 0;
+      const pct = Math.round(p.share * 100);
+      const hoursNote = p.hours ? ` · ${p.hours}hrs` : '';
+      splitDiv.innerHTML += `
+        <div class="person-card">
+          <div class="person-card-header">
+            <span>${p.name}</span>
+            <span class="share-pct">${pct}% share${hoursNote}</span>
+          </div>
+          <div class="cashout-banner ${isDueback ? 'dueback' : 'owe'}" style="border-radius:0;margin:0;border:none;border-top:1px solid var(--border)">
+            <div class="banner-label">${isDueback ? 'Owed (Dueback)' : 'Owes House'}</div>
+            <div class="banner-amount">${fmt(p.finalAmount)}</div>
+          </div>
+        </div>`;
+    });
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
