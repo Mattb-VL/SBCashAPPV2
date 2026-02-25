@@ -1221,7 +1221,6 @@ async function submitCashout() {
     btn.style.opacity = '0.35';
     btn.style.pointerEvents = 'none';
     document.getElementById('resetBtn').classList.add('active');
-    setTimeout(() => resetForm(), 5000);
   } catch (e) {
     showToast('Submission failed — check connection', 'error');
     btn.disabled = false;
