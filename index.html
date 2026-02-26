@@ -511,7 +511,7 @@
     </div>
     <div class="field">
       <label>REFERENCE #</label>
-      <input type="number" id="refNum" inputmode="numeric" placeholder="12">
+      <input type="number" id="refNum" inputmode="numeric" placeholder="00">
     </div>
     <div class="field">
       <label>CASHOUT TYPE</label>
@@ -546,35 +546,57 @@
   <div class="section-label">Customizations</div>
   <div class="card">
 
-    <!-- Split Options (hours-based) -->
-    <div class="custom-check-row" id="customRowSplitOptions">
+    <!-- SERVER: Server Split -->
+    <div class="custom-check-row" id="customRowServerSplit" style="display:none;">
       <label class="custom-check-label">
-        <input type="checkbox" id="customSplitOptions" onchange="toggleCustomSplitOptions()">
-        Split Options (hours-based split)
+        <input type="checkbox" id="serverSplitCb" onchange="toggleServerSplit()">
+        Server Split
       </label>
-      <div id="customSplitSection" class="custom-expand">
-        <p style="margin-bottom:8px;">Enter hours worked for each server to split proportionally.</p>
-        <div id="customHoursInputs"></div>
-        <button type="button" class="add-member-btn" onclick="addCustomHoursEntry()">+ Add Team Member</button>
+      <div id="serverSplitSection" class="custom-expand">
+        <div class="bar-type-toggle">
+          <button class="toggle-btn active" id="serverSplitEqualBtn" onclick="selectServerSplitType('equal')">Equal</button>
+          <button class="toggle-btn" id="serverSplitHoursBtn" onclick="selectServerSplitType('hours')">By Hours</button>
+        </div>
+        <div id="serverSplitEqualNote" style="font-size:12px;color:var(--muted);">Names entered above will be split equally.</div>
+        <div id="serverSplitHoursWrapper" style="display:none;margin-top:8px;">
+          <div id="serverSplitHoursInputs"></div>
+          <button type="button" class="add-member-btn" onclick="addServerSplitHoursEntry()">+ Add Team Member</button>
+        </div>
       </div>
     </div>
 
-    <!-- Shared With Bartender -->
-    <div class="custom-check-row" id="customRowSharedBart">
+    <!-- SERVER: Split including Bar -->
+    <div class="custom-check-row" id="customRowSplitIncBar" style="display:none;">
       <label class="custom-check-label">
-        <input type="checkbox" id="sharedWithBartenderCb" onchange="toggleSharedBartender()">
-        Shared With Bartender (excludes bar tip-out)
+        <input type="checkbox" id="splitIncBarCb" onchange="toggleSplitIncBar()">
+        Split including Bar
       </label>
-      <div id="sharedBartenderSection" class="custom-expand">
+      <div id="splitIncBarSection" class="custom-expand">
         <div class="bar-type-toggle">
-          <button class="toggle-btn active" id="bartEqualBtn" onclick="selectBartType('equal')">Equal Split</button>
-          <button class="toggle-btn" id="bartHoursBtn" onclick="selectBartType('hours')">By Hours</button>
+          <button class="toggle-btn active" id="splitIncBarEqualBtn" onclick="selectSplitIncBarType('equal')">Equal</button>
+          <button class="toggle-btn" id="splitIncBarHoursBtn" onclick="selectSplitIncBarType('hours')">By Hours</button>
         </div>
-        <div id="bartEqualNote">Names entered above will be split equally. Bar tip-out excluded.</div>
-        <div id="bartHoursWrapper" style="display:none;">
-          <div id="bartHoursInputs"></div>
-          <button type="button" class="add-member-btn" onclick="addBartHoursEntry()">+ Add Team Member</button>
-          <p style="margin-top:6px;">Split proportionally by hours. Bar tip-out excluded.</p>
+        <div id="splitIncBarEqualNote" style="font-size:12px;color:var(--muted);">Names entered above will be split equally. Bar tip-out excluded.</div>
+        <div id="splitIncBarHoursWrapper" style="display:none;margin-top:8px;">
+          <div id="splitIncBarHoursInputs"></div>
+          <button type="button" class="add-member-btn" onclick="addSplitIncBarHoursEntry()">+ Add Team Member</button>
+          <p style="margin-top:6px;font-size:12px;color:var(--muted);">Split proportionally by hours. Bar tip-out excluded.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAR: Split Type (auto-expanded, no checkbox) -->
+    <div class="custom-check-row" id="customRowBarSplit" style="display:none;flex-direction:column;">
+      <span style="font-size:13px;color:var(--text);margin-bottom:10px;">Split Type</span>
+      <div class="custom-expand" style="display:block;">
+        <div class="bar-type-toggle">
+          <button class="toggle-btn active" id="barSplitEqualBtn" onclick="selectBarSplitType('equal')">Equal</button>
+          <button class="toggle-btn" id="barSplitHoursBtn" onclick="selectBarSplitType('hours')">By Hours</button>
+        </div>
+        <div id="barSplitEqualNote" style="font-size:12px;color:var(--muted);">Names entered above will be split equally.</div>
+        <div id="barSplitHoursWrapper" style="display:none;margin-top:8px;">
+          <div id="barSplitHoursInputs"></div>
+          <button type="button" class="add-member-btn" onclick="addBarSplitHoursEntry()">+ Add Team Member</button>
         </div>
       </div>
     </div>
@@ -723,10 +745,12 @@
 const SCRIPT_URL = 'https://script.google.com/a/macros/veraisonlabs.com/s/AKfycbxGqKArb5FqDGpXt--CyI_0TNJpkX0EKi2oZkxnhuAwX4NOy6ymxrRnffaRMgPFvU8/exec';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let netCashNegative = true;   // true = "−" (dueback mode), false = "+" (owes house)
-let bartSplitType   = 'equal';
-let calcData        = null;
-let syncingNames    = false;
+let netCashNegative  = true;   // true = "−" (dueback mode), false = "+" (owes house)
+let serverSplitType  = 'equal';
+let splitIncBarType  = 'equal';
+let barSplitType     = 'equal';
+let calcData         = null;
+let syncingNames     = false;
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const fmt = n => '$' + Math.abs(n).toFixed(2);
@@ -764,10 +788,12 @@ document.getElementById('section').addEventListener('change', function () {
   if (!isSushi) document.getElementById('sushiNames').value = '';
 
   // Customization rows
-  document.getElementById('customRowSplitOptions').style.display    = isSushi ? 'none' : 'flex';
-  document.getElementById('customRowSharedBart').style.display      = isSushi ? 'none' : 'flex';
-  document.getElementById('customRowSushiHours').style.display      = isSushi ? 'flex' : 'none';
-  document.getElementById('customRowSushiTeamHours').style.display  = isSushi ? 'flex' : 'none';
+  const isServer = !isBar && !isSushi;
+  document.getElementById('customRowServerSplit').style.display     = isServer ? 'flex' : 'none';
+  document.getElementById('customRowSplitIncBar').style.display     = isServer ? 'flex' : 'none';
+  document.getElementById('customRowBarSplit').style.display        = isBar    ? 'flex' : 'none';
+  document.getElementById('customRowSushiHours').style.display      = isSushi  ? 'flex' : 'none';
+  document.getElementById('customRowSushiTeamHours').style.display  = isSushi  ? 'flex' : 'none';
 
   // Sales Figures
   document.getElementById('totalSalesField').style.display   = isSushi ? 'none' : 'block';
@@ -799,68 +825,38 @@ function toggleNetCashSign() {
   netCashNegative ? btn.classList.remove('positive') : btn.classList.add('positive');
 }
 
-// ── TWO-WAY NAMES ↔ SPLIT OPTIONS SYNC ───────────────────────────────────────
-document.getElementById('names').addEventListener('input', function () {
-  if (syncingNames || !document.getElementById('customSplitOptions').checked) return;
-  syncingNames = true;
+// ── NAMES → HOURS INPUTS SYNC ─────────────────────────────────────────────────
+function syncHoursFromNames(containerEl, nameClass, valClass) {
   const names = getNames();
-  const container = document.getElementById('customHoursInputs');
-  // Preserve existing hours by name
   const hoursMap = {};
-  container.querySelectorAll('.custom-hours-grid').forEach(row => {
-    const n = row.querySelector('.cust-hrs-name');
-    const h = row.querySelector('.cust-hrs-val');
+  containerEl.querySelectorAll('.custom-hours-grid').forEach(row => {
+    const n = row.querySelector('.' + nameClass);
+    const h = row.querySelector('.' + valClass);
     if (n && h) hoursMap[n.value.trim()] = h.value;
   });
-  container.innerHTML = '';
+  containerEl.innerHTML = '';
   (names.length ? names : ['']).forEach(n => {
-    const row = createCustomHoursRow(n, 'cust-hrs-name', 'cust-hrs-val');
-    const hInput = row.querySelector('.cust-hrs-val');
+    const row = createCustomHoursRow(n, nameClass, valClass);
+    const hInput = row.querySelector('.' + valClass);
     if (hoursMap[n]) hInput.value = hoursMap[n];
-    container.appendChild(row);
+    containerEl.appendChild(row);
   });
-  syncingNames = false;
-});
+}
 
-document.getElementById('customHoursInputs').addEventListener('input', function (e) {
-  if (syncingNames || !e.target.classList.contains('cust-hrs-name')) return;
-  syncingNames = true;
-  const names = Array.from(document.querySelectorAll('.cust-hrs-name'))
-    .map(i => i.value.trim()).filter(n => n);
-  document.getElementById('names').value = names.join(', ');
-  syncingNames = false;
-});
-
-// names (bar team) ↔ sushi bar hours grid
 document.getElementById('names').addEventListener('input', function () {
-  if (syncingNames || !document.getElementById('sushiBarHoursCb').checked) return;
+  if (syncingNames) return;
   syncingNames = true;
-  const names = getNames();
-  const container = document.getElementById('sushiBarHoursInputs');
-  const hoursMap = {};
-  container.querySelectorAll('.custom-hours-grid').forEach(row => {
-    const n = row.querySelector('.sushi-bar-hrs-name');
-    const h = row.querySelector('.sushi-bar-hrs-val');
-    if (n && h) hoursMap[n.value.trim()] = h.value;
-  });
-  container.innerHTML = '';
-  (names.length ? names : ['']).forEach(n => {
-    const row = createCustomHoursRow(n, 'sushi-bar-hrs-name', 'sushi-bar-hrs-val');
-    const hInput = row.querySelector('.sushi-bar-hrs-val');
-    if (hoursMap[n]) hInput.value = hoursMap[n];
-    container.appendChild(row);
-  });
+  const serverHoursActive = document.getElementById('serverSplitCb')?.checked && serverSplitType === 'hours';
+  const incBarHoursActive = document.getElementById('splitIncBarCb')?.checked && splitIncBarType === 'hours';
+  const barHoursActive    = document.getElementById('customRowBarSplit')?.style.display !== 'none' && barSplitType === 'hours';
+  const sushiBarActive    = document.getElementById('sushiBarHoursCb')?.checked;
+  if (serverHoursActive) syncHoursFromNames(document.getElementById('serverSplitHoursInputs'), 'server-split-hrs-name', 'server-split-hrs-val');
+  if (incBarHoursActive) syncHoursFromNames(document.getElementById('splitIncBarHoursInputs'), 'split-incbar-hrs-name', 'split-incbar-hrs-val');
+  if (barHoursActive)    syncHoursFromNames(document.getElementById('barSplitHoursInputs'),    'bar-split-hrs-name',    'bar-split-hrs-val');
+  if (sushiBarActive)    syncHoursFromNames(document.getElementById('sushiBarHoursInputs'),    'sushi-bar-hrs-name',    'sushi-bar-hrs-val');
   syncingNames = false;
 });
 
-document.getElementById('sushiBarHoursInputs').addEventListener('input', function (e) {
-  if (syncingNames || !e.target.classList.contains('sushi-bar-hrs-name')) return;
-  syncingNames = true;
-  const names = Array.from(document.querySelectorAll('.sushi-bar-hrs-name'))
-    .map(i => i.value.trim()).filter(n => n);
-  document.getElementById('names').value = names.join(', ');
-  syncingNames = false;
-});
 
 // sushiNames (sushi team) ↔ sushi team hours grid
 document.getElementById('sushiNames').addEventListener('input', function () {
@@ -1034,8 +1030,8 @@ function calculate() {
   const sFoodTipPool = isBarType ? (parseFloat(document.getElementById('sFoodTipPool').value) || 0) : 0;
   const beoSales     = parseFloat(document.getElementById('beoSales').value)     || 0;
 
-  const customSplitOn = document.getElementById('customSplitOptions').checked;
-  const sharedBartOn  = document.getElementById('sharedWithBartenderCb').checked;
+  const serverSplitOn = !isBarType && document.getElementById('serverSplitCb').checked;
+  const splitIncBarOn = !isBarType && document.getElementById('splitIncBarCb').checked;
 
   let serverValid = true;
   if (!totalSales)     { document.getElementById('totalSales').classList.add('error'); serverValid = false; }
@@ -1049,7 +1045,7 @@ function calculate() {
   const houseBase    = isBarType ? sFoodTipPool : totalSales;
   const house        = roundHalfUp(houseBase * 0.035);
   const busser       = roundHalfUp(houseBase * 0.01);
-  const bar          = isBarType ? 0 : (sharedBartOn ? 0 : roundHalfUp(totalSales * 0.01));
+  const bar          = (isBarType || splitIncBarOn) ? 0 : roundHalfUp(totalSales * 0.01);
   const expo         = roundHalfUp(foodSales * 0.015);
   const events       = beoSales > 0 ? roundHalfUp(beoSales * 0.01) : 0;
   const totalTipOut  = roundHalfUp(house + busser + bar + expo + events);
@@ -1079,8 +1075,8 @@ function calculate() {
 
   // Per-person shares
   let persons = [];
-  if (customSplitOn) {
-    const hd = getCustomHoursData('cust-hrs-name', 'cust-hrs-val');
+  if (isBarType && barSplitType === 'hours') {
+    const hd = getCustomHoursData('bar-split-hrs-name', 'bar-split-hrs-val');
     if (!hd) return;
     const th = hd.reduce((s, p) => s + p.hours, 0);
     persons = hd.map(p => ({
@@ -1088,20 +1084,24 @@ function calculate() {
       share: p.hours / th,
       finalAmount: roundHalfUp(finalAmount * (p.hours / th))
     }));
-  } else if (sharedBartOn) {
-    if (bartSplitType === 'equal') {
-      const share = 1 / names.length;
-      persons = names.map(n => ({ name: n, share, finalAmount: roundHalfUp(finalAmount * share) }));
-    } else {
-      const hd = getCustomHoursData('bart-hrs-name', 'bart-hrs-val');
-      if (!hd) return;
-      const th = hd.reduce((s, p) => s + p.hours, 0);
-      persons = hd.map(p => ({
-        name: p.name, hours: p.hours,
-        share: p.hours / th,
-        finalAmount: roundHalfUp(finalAmount * (p.hours / th))
-      }));
-    }
+  } else if (serverSplitOn && serverSplitType === 'hours') {
+    const hd = getCustomHoursData('server-split-hrs-name', 'server-split-hrs-val');
+    if (!hd) return;
+    const th = hd.reduce((s, p) => s + p.hours, 0);
+    persons = hd.map(p => ({
+      name: p.name, hours: p.hours,
+      share: p.hours / th,
+      finalAmount: roundHalfUp(finalAmount * (p.hours / th))
+    }));
+  } else if (splitIncBarOn && splitIncBarType === 'hours') {
+    const hd = getCustomHoursData('split-incbar-hrs-name', 'split-incbar-hrs-val');
+    if (!hd) return;
+    const th = hd.reduce((s, p) => s + p.hours, 0);
+    persons = hd.map(p => ({
+      name: p.name, hours: p.hours,
+      share: p.hours / th,
+      finalAmount: roundHalfUp(finalAmount * (p.hours / th))
+    }));
   } else if (names.length === 1) {
     persons = [{ name: names[0], share: 1, finalAmount }];
   } else {
@@ -1255,16 +1255,29 @@ function resetForm() {
   document.getElementById('beoSalesField').style.display         = 'block';
   document.getElementById('sFoodTipPoolField').style.display     = 'none';
 
-  // Reset customization checkboxes
-  document.getElementById('customSplitOptions').checked    = false;
-  document.getElementById('sharedWithBartenderCb').checked = false;
-  document.getElementById('sushiBarHoursCb').checked        = false;
-  document.getElementById('sushiTeamHoursCb').checked       = false;
-  document.getElementById('customRowSushiTeamHours').style.display = 'none';
-  document.getElementById('customSplitSection').style.display      = 'none';
-  document.getElementById('sharedBartenderSection').style.display  = 'none';
-  document.getElementById('sushiBarHoursSection').style.display    = 'none';
-  document.getElementById('sushiTeamHoursSection').style.display   = 'none';
+  // Reset customization checkboxes and sections
+  ['serverSplitCb','splitIncBarCb','sushiBarHoursCb','sushiTeamHoursCb'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.checked = false;
+  });
+  ['serverSplitSection','splitIncBarSection','sushiBarHoursSection','sushiTeamHoursSection'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  ['customRowServerSplit','customRowSplitIncBar','customRowBarSplit','customRowSushiHours','customRowSushiTeamHours'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  serverSplitType = 'equal'; splitIncBarType = 'equal'; barSplitType = 'equal';
+  ['serverSplitEqualBtn','splitIncBarEqualBtn','barSplitEqualBtn'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.classList.add('active');
+  });
+  ['serverSplitHoursBtn','splitIncBarHoursBtn','barSplitHoursBtn'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.classList.remove('active');
+  });
+  ['serverSplitHoursWrapper','splitIncBarHoursWrapper','barSplitHoursWrapper'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  ['serverSplitEqualNote','splitIncBarEqualNote','barSplitEqualNote'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'block';
+  });
 
   // Reset names label
   document.getElementById('namesLabel').innerHTML =
@@ -1309,57 +1322,69 @@ function getCustomHoursData(nameClass, hoursClass) {
   return data;
 }
 
-function toggleCustomSplitOptions() {
-  const on = document.getElementById('customSplitOptions').checked;
+// ── SERVER SPLIT ──────────────────────────────────────────────────────────────
+function toggleServerSplit() {
+  const on = document.getElementById('serverSplitCb').checked;
   if (on) {
-    document.getElementById('sharedWithBartenderCb').checked = false;
-    document.getElementById('sharedBartenderSection').style.display = 'none';
+    document.getElementById('splitIncBarCb').checked = false;
+    document.getElementById('splitIncBarSection').style.display = 'none';
   }
-  document.getElementById('customSplitSection').style.display = on ? 'block' : 'none';
-  if (on) populateCustomHoursFromNames();
+  document.getElementById('serverSplitSection').style.display = on ? 'block' : 'none';
+  if (on && serverSplitType === 'hours') syncHoursFromNames(document.getElementById('serverSplitHoursInputs'), 'server-split-hrs-name', 'server-split-hrs-val');
 }
 
-function populateCustomHoursFromNames() {
-  const names = getNames();
-  const c = document.getElementById('customHoursInputs');
-  c.innerHTML = '';
-  (names.length ? names : ['']).forEach(n => c.appendChild(createCustomHoursRow(n, 'cust-hrs-name', 'cust-hrs-val')));
+function selectServerSplitType(type) {
+  serverSplitType = type;
+  document.getElementById('serverSplitEqualBtn').classList.toggle('active', type === 'equal');
+  document.getElementById('serverSplitHoursBtn').classList.toggle('active', type === 'hours');
+  document.getElementById('serverSplitEqualNote').style.display    = type === 'equal' ? 'block' : 'none';
+  document.getElementById('serverSplitHoursWrapper').style.display = type === 'hours' ? 'block' : 'none';
+  if (type === 'hours') syncHoursFromNames(document.getElementById('serverSplitHoursInputs'), 'server-split-hrs-name', 'server-split-hrs-val');
 }
 
-function addCustomHoursEntry() {
-  document.getElementById('customHoursInputs')
-    .appendChild(createCustomHoursRow('', 'cust-hrs-name', 'cust-hrs-val'));
+function addServerSplitHoursEntry() {
+  document.getElementById('serverSplitHoursInputs')
+    .appendChild(createCustomHoursRow('', 'server-split-hrs-name', 'server-split-hrs-val'));
 }
 
-function toggleSharedBartender() {
-  const on = document.getElementById('sharedWithBartenderCb').checked;
+// ── SPLIT INCLUDING BAR ───────────────────────────────────────────────────────
+function toggleSplitIncBar() {
+  const on = document.getElementById('splitIncBarCb').checked;
   if (on) {
-    document.getElementById('customSplitOptions').checked = false;
-    document.getElementById('customSplitSection').style.display = 'none';
-    if (bartSplitType === 'hours') populateBartHoursFromNames();
+    document.getElementById('serverSplitCb').checked = false;
+    document.getElementById('serverSplitSection').style.display = 'none';
   }
-  document.getElementById('sharedBartenderSection').style.display = on ? 'block' : 'none';
+  document.getElementById('splitIncBarSection').style.display = on ? 'block' : 'none';
+  if (on && splitIncBarType === 'hours') syncHoursFromNames(document.getElementById('splitIncBarHoursInputs'), 'split-incbar-hrs-name', 'split-incbar-hrs-val');
 }
 
-function selectBartType(type) {
-  bartSplitType = type;
-  document.getElementById('bartEqualBtn').classList.toggle('active', type === 'equal');
-  document.getElementById('bartHoursBtn').classList.toggle('active', type === 'hours');
-  document.getElementById('bartEqualNote').style.display   = type === 'equal' ? 'block' : 'none';
-  document.getElementById('bartHoursWrapper').style.display = type === 'hours' ? 'block' : 'none';
-  if (type === 'hours') populateBartHoursFromNames();
+function selectSplitIncBarType(type) {
+  splitIncBarType = type;
+  document.getElementById('splitIncBarEqualBtn').classList.toggle('active', type === 'equal');
+  document.getElementById('splitIncBarHoursBtn').classList.toggle('active', type === 'hours');
+  document.getElementById('splitIncBarEqualNote').style.display    = type === 'equal' ? 'block' : 'none';
+  document.getElementById('splitIncBarHoursWrapper').style.display = type === 'hours' ? 'block' : 'none';
+  if (type === 'hours') syncHoursFromNames(document.getElementById('splitIncBarHoursInputs'), 'split-incbar-hrs-name', 'split-incbar-hrs-val');
 }
 
-function populateBartHoursFromNames() {
-  const names = getNames();
-  const c = document.getElementById('bartHoursInputs');
-  c.innerHTML = '';
-  (names.length ? names : ['']).forEach(n => c.appendChild(createCustomHoursRow(n, 'bart-hrs-name', 'bart-hrs-val')));
+function addSplitIncBarHoursEntry() {
+  document.getElementById('splitIncBarHoursInputs')
+    .appendChild(createCustomHoursRow('', 'split-incbar-hrs-name', 'split-incbar-hrs-val'));
 }
 
-function addBartHoursEntry() {
-  document.getElementById('bartHoursInputs')
-    .appendChild(createCustomHoursRow('', 'bart-hrs-name', 'bart-hrs-val'));
+// ── BAR SPLIT TYPE ────────────────────────────────────────────────────────────
+function selectBarSplitType(type) {
+  barSplitType = type;
+  document.getElementById('barSplitEqualBtn').classList.toggle('active', type === 'equal');
+  document.getElementById('barSplitHoursBtn').classList.toggle('active', type === 'hours');
+  document.getElementById('barSplitEqualNote').style.display    = type === 'equal' ? 'block' : 'none';
+  document.getElementById('barSplitHoursWrapper').style.display = type === 'hours' ? 'block' : 'none';
+  if (type === 'hours') syncHoursFromNames(document.getElementById('barSplitHoursInputs'), 'bar-split-hrs-name', 'bar-split-hrs-val');
+}
+
+function addBarSplitHoursEntry() {
+  document.getElementById('barSplitHoursInputs')
+    .appendChild(createCustomHoursRow('', 'bar-split-hrs-name', 'bar-split-hrs-val'));
 }
 
 function toggleSushiBarHours() {
