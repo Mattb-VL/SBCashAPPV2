@@ -46,18 +46,20 @@
   .logo {
     width: 36px;
     height: 36px;
-    background: #000;
     border-radius: 8px;
     border: 1.5px solid var(--accent);
+    overflow: hidden;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 16px;
-    color: var(--accent);
-    flex-shrink: 0;
-    letter-spacing: 0.02em;
+  }
+
+  .logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   header h1 {
@@ -495,7 +497,7 @@
 <body>
 
 <header>
-  <div class="logo">VL</div>
+  <div class="logo"><img src="VL-thumbnail.png" alt="VL"></div>
   <h1>Cashout Calculator</h1>
   <span class="version">v2.0 — 2026-02-25</span>
 </header>
@@ -1224,7 +1226,7 @@ async function submitCashout() {
   } catch (e) {
     showToast('Submission failed — check connection', 'error');
     btn.disabled = false;
-    btn.textContent = 'Submit to Google Sheets';
+    btn.textContent = 'Submit Cashout';
   }
 }
 
@@ -1247,8 +1249,6 @@ function resetForm() {
 
   // Reset field visibility
   document.getElementById('sushiNamesField').style.display       = 'none';
-  document.getElementById('customRowSplitOptions').style.display = 'flex';
-  document.getElementById('customRowSharedBart').style.display   = 'flex';
   document.getElementById('customRowSushiHours').style.display   = 'none';
   document.getElementById('totalSalesField').style.display       = 'block';
   document.getElementById('foodSalesField').style.display        = 'block';
