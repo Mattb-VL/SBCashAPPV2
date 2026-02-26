@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Sandbar Cashout</title>
+<title>Cashout Calculator</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
 
@@ -732,7 +732,7 @@ let syncingNames    = false;
 const fmt = n => '$' + Math.abs(n).toFixed(2);
 
 function roundHalfUp(n) {
-  return Math.round(n * 100 + Number.EPSILON) / 100;
+  return Math.round((n + 1e-10) * 100) / 100;
 }
 
 function getNames() {
