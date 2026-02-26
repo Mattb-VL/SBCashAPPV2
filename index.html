@@ -709,7 +709,7 @@
     <div id="sushiDistCard" style="display:none;">
       <div class="result-card">
         <div class="result-row">
-          <span class="label">Total Tips Collected</span>
+          <span class="label">Total Cash Due (Net Cash)</span>
           <span class="value accent" id="r_totalTips">—</span>
         </div>
         <div class="result-row">
@@ -812,17 +812,11 @@ document.getElementById('section').addEventListener('change', function () {
 
   // Net Cash label & sign button
   const signBtn = document.getElementById('netCashSignBtn');
-  if (isSushi) {
-    signBtn.style.display = 'none';
-    netCashNegative = false;
-    document.getElementById('netCashLabel').textContent = 'TOTAL TIPS COLLECTED ';
-  } else {
-    signBtn.style.display = 'inline-flex';
-    netCashNegative = true;
-    signBtn.textContent = '−';
-    signBtn.classList.remove('positive');
-    document.getElementById('netCashLabel').textContent = 'TOTAL CASH DUE (NET CASH) ';
-  }
+  signBtn.style.display = 'inline-flex';
+  netCashNegative = true;
+  signBtn.textContent = '−';
+  signBtn.classList.remove('positive');
+  document.getElementById('netCashLabel').textContent = 'TOTAL CASH DUE (NET CASH) ';
 });
 
 // ── NET CASH SIGN TOGGLE ──────────────────────────────────────────────────────
@@ -922,18 +916,19 @@ function calculate() {
   if (isSushiType) {
     const sushiNamesRaw  = document.getElementById('sushiNames').value;
     const sushiNamesList = sushiNamesRaw.split(',').map(n => n.trim()).filter(n => n.length > 0);
-    const netCashRaw     = parseFloat(document.getElementById('netCash').value);
+    const netCashAbs     = parseFloat(document.getElementById('netCash').value) || 0;
+    const netCashSushi   = netCashNegative ? -Math.abs(netCashAbs) : Math.abs(netCashAbs);
 
     if (!sushiNamesList.length) {
       document.getElementById('sushiNames').classList.add('error');
       showToast('Please fill in all required fields', 'error'); return;
     }
-    if (isNaN(netCashRaw) || netCashRaw <= 0) {
+    if (!netCashAbs) {
       document.getElementById('netCash').classList.add('error');
-      showToast('Enter total tips collected', 'error'); return;
+      showToast('Please fill in all required fields', 'error'); return;
     }
 
-    const totalTips  = roundHalfUp(netCashRaw);
+    const totalTips  = roundHalfUp(netCashSushi);
     const barTotal   = roundHalfUp(totalTips / 2);
     const sushiTotal = roundHalfUp(totalTips - barTotal);
 
@@ -986,7 +981,16 @@ function calculate() {
     document.getElementById('r_barTotal').textContent   = fmt(barTotal);
     document.getElementById('r_sushiTotal').textContent = fmt(sushiTotal);
 
-    document.getElementById('singleResult').style.display = 'none';
+    // Main banner — same dueback/owe display as other types
+    const isDuebackSushi = totalTips < 0;
+    const sushiBanner = document.getElementById('cashoutBanner');
+    sushiBanner.className = 'cashout-banner ' + (isDuebackSushi ? 'dueback' : 'owe');
+    document.getElementById('bannerAmount').textContent = isDuebackSushi
+      ? `Dueback: -$${Math.abs(totalTips).toFixed(2)}`
+      : `Submit: $${totalTips.toFixed(2)}`;
+    document.getElementById('bannerSub').textContent = '';
+    document.getElementById('singleResult').style.display = 'block';
+
     const splitDiv = document.getElementById('splitResults');
     splitDiv.innerHTML = '';
 
@@ -994,15 +998,15 @@ function calculate() {
     barPersons.forEach(p => {
       const pct = Math.round(p.share * 100);
       const hoursNote = p.hours ? ` · ${p.hours}hrs` : '';
+      const isDueback = p.amount < 0;
       splitDiv.innerHTML += `
         <div class="person-card">
           <div class="person-card-header">
             <span>${p.name}</span>
             <span class="share-pct">${pct}% share${hoursNote}</span>
           </div>
-          <div class="cashout-banner tips" style="border-radius:0;margin:0;border:none;border-top:1px solid var(--border)">
-            <div class="banner-label">Tips Owed</div>
-            <div class="banner-amount">${fmt(p.amount)}</div>
+          <div class="cashout-banner ${isDueback ? 'dueback' : 'owe'}" style="border-radius:0;margin:0;border:none;border-top:1px solid var(--border)">
+            <div class="banner-amount">${isDueback ? `Dueback: -$${Math.abs(p.amount).toFixed(2)}` : `Submit: $${p.amount.toFixed(2)}`}</div>
           </div>
         </div>`;
     });
@@ -1010,15 +1014,16 @@ function calculate() {
     splitDiv.innerHTML += '<div class="team-label" style="margin-top:16px;">Sushi Team</div>';
     sushiPersons.forEach(p => {
       const pct = Math.round(p.share * 100);
+      const hoursNote = p.hours ? ` · ${p.hours}hrs` : '';
+      const isDueback = p.amount < 0;
       splitDiv.innerHTML += `
         <div class="person-card">
           <div class="person-card-header">
             <span>${p.name}</span>
-            <span class="share-pct">${pct}% share</span>
+            <span class="share-pct">${pct}% share${hoursNote}</span>
           </div>
-          <div class="cashout-banner tips" style="border-radius:0;margin:0;border:none;border-top:1px solid var(--border)">
-            <div class="banner-label">Tips Owed</div>
-            <div class="banner-amount">${fmt(p.amount)}</div>
+          <div class="cashout-banner ${isDueback ? 'dueback' : 'owe'}" style="border-radius:0;margin:0;border:none;border-top:1px solid var(--border)">
+            <div class="banner-amount">${isDueback ? `Dueback: -$${Math.abs(p.amount).toFixed(2)}` : `Submit: $${p.amount.toFixed(2)}`}</div>
           </div>
         </div>`;
     });
