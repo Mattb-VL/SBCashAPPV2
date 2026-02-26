@@ -198,6 +198,7 @@
     transition: opacity 0.15s, transform 0.1s;
   }
   .calc-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .calc-btn.dim { opacity: 0.3; cursor: default; pointer-events: none; }
 
   /* Results */
   #results { display: none; margin-top: 8px; }
@@ -632,44 +633,46 @@
   </div>
 
   <!-- SALES FIGURES -->
-  <div class="section-label">Sales Figures</div>
+  <div class="section-label">Sales Figures <span id="salesFiguresHint" style="color:var(--muted);font-size:10px;font-weight:400;text-transform:none;font-family:'DM Mono',monospace;">— select cashout type</span></div>
   <div class="card">
-    <div class="field" id="totalSalesField">
-      <label>TOTAL SALES (NET TOTAL)</label>
-      <div class="dollar-wrap">
-        <input type="number" id="totalSales" inputmode="decimal" step="0.01" placeholder="0.00">
-      </div>
-    </div>
-    <div class="field" id="netCashField">
-      <label id="netCashLabel">TOTAL CASH DUE (NET CASH)</label>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <button type="button" class="sign-btn" id="netCashSignBtn" onclick="toggleNetCashSign()">−</button>
-        <div class="dollar-wrap" style="flex:1;">
-          <input type="number" id="netCash" inputmode="decimal" step="0.01" placeholder="0.00">
+    <div id="salesFiguresFields" style="display:none;">
+      <div class="field" id="totalSalesField">
+        <label>TOTAL SALES (NET TOTAL)</label>
+        <div class="dollar-wrap">
+          <input type="number" id="totalSales" inputmode="decimal" step="0.01" placeholder="0.00">
         </div>
       </div>
-    </div>
-    <div class="field" id="foodSalesField">
-      <label>FOOD SALES (DOLLARS COLUMN)</label>
-      <div class="dollar-wrap">
-        <input type="number" id="foodSales" inputmode="decimal" step="0.01" placeholder="0.00">
+      <div class="field" id="netCashField">
+        <label id="netCashLabel">TOTAL CASH DUE (NET CASH)</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="sign-btn" id="netCashSignBtn" onclick="toggleNetCashSign()">−</button>
+          <div class="dollar-wrap" style="flex:1;">
+            <input type="number" id="netCash" inputmode="decimal" step="0.01" placeholder="0.00">
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="field" id="sFoodTipPoolField" style="display:none;">
-      <label>FOOD SALES #2 (S-FOOD)</label>
-      <div class="dollar-wrap">
-        <input type="number" id="sFoodTipPool" inputmode="decimal" step="0.01" placeholder="0.00">
+      <div class="field" id="foodSalesField">
+        <label>FOOD SALES (DOLLARS COLUMN)</label>
+        <div class="dollar-wrap">
+          <input type="number" id="foodSales" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
       </div>
-    </div>
-    <div class="field" id="beoSalesField">
-      <label>EVENTS / BEO SUBTOTAL <span style="color:var(--muted);font-size:11px">(IF APPLICABLE)</span></label>
-      <div class="dollar-wrap">
-        <input type="number" id="beoSales" inputmode="decimal" step="0.01" placeholder="0.00">
+      <div class="field" id="sFoodTipPoolField" style="display:none;">
+        <label>FOOD SALES #2 (S-FOOD)</label>
+        <div class="dollar-wrap">
+          <input type="number" id="sFoodTipPool" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
       </div>
-    </div>
+      <div class="field" id="beoSalesField">
+        <label>EVENTS / BEO SUBTOTAL <span style="color:var(--muted);font-size:11px">(IF APPLICABLE)</span></label>
+        <div class="dollar-wrap">
+          <input type="number" id="beoSales" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+    </div><!-- /salesFiguresFields -->
   </div>
 
-  <button class="calc-btn" onclick="calculate()">Calculate Cashout</button>
+  <button class="calc-btn dim" id="calcBtn" onclick="calculate()">Calculate Cashout</button>
 
   <!-- RESULTS -->
   <div id="results">
@@ -798,6 +801,9 @@ document.getElementById('section').addEventListener('change', function () {
   document.getElementById('customRowSushiTeamHours').style.display  = isSushi  ? 'flex' : 'none';
 
   // Sales Figures
+  document.getElementById('salesFiguresHint').style.display   = 'none';
+  document.getElementById('salesFiguresFields').style.display = 'block';
+  document.getElementById('calcBtn').classList.remove('dim');
   document.getElementById('totalSalesField').style.display   = isSushi ? 'none' : 'block';
   document.getElementById('foodSalesField').style.display    = isSushi ? 'none' : 'block';
   document.getElementById('beoSalesField').style.display     = isSushi ? 'none' : 'block';
@@ -1250,6 +1256,9 @@ function resetForm() {
   // Reset field visibility
   document.getElementById('sushiNamesField').style.display       = 'none';
   document.getElementById('customRowSushiHours').style.display   = 'none';
+  document.getElementById('salesFiguresHint').style.display      = 'inline';
+  document.getElementById('salesFiguresFields').style.display    = 'none';
+  document.getElementById('calcBtn').classList.add('dim');
   document.getElementById('totalSalesField').style.display       = 'block';
   document.getElementById('foodSalesField').style.display        = 'block';
   document.getElementById('beoSalesField').style.display         = 'block';
