@@ -651,16 +651,16 @@
           </div>
         </div>
       </div>
-      <div class="field" id="foodSalesField">
-        <label>FOOD SALES (DOLLARS COLUMN)</label>
-        <div class="dollar-wrap">
-          <input type="number" id="foodSales" inputmode="decimal" step="0.01" placeholder="0.00">
-        </div>
-      </div>
       <div class="field" id="sFoodTipPoolField" style="display:none;">
-        <label>FOOD SALES #2 (S-FOOD)</label>
+        <label>FOOD SALES #1 (S-FOOD)</label>
         <div class="dollar-wrap">
           <input type="number" id="sFoodTipPool" inputmode="decimal" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <div class="field" id="foodSalesField">
+        <label id="foodSalesLabel">FOOD SALES #2 (DOLLARS COLUMN)</label>
+        <div class="dollar-wrap">
+          <input type="number" id="foodSales" inputmode="decimal" step="0.01" placeholder="0.00">
         </div>
       </div>
       <div class="field" id="beoSalesField">
@@ -809,6 +809,9 @@ document.getElementById('section').addEventListener('change', function () {
   document.getElementById('beoSalesField').style.display     = isSushi ? 'none' : 'block';
   document.getElementById('sFoodTipPoolField').style.display = isBar   ? 'block' : 'none';
   if (!isBar) document.getElementById('sFoodTipPool').value  = '';
+  document.getElementById('foodSalesLabel').textContent = isBar
+    ? 'FOOD SALES #2 (DOLLARS COLUMN)'
+    : 'FOOD SALES (DOLLARS COLUMN)';
 
   // Net Cash label & sign button
   const signBtn = document.getElementById('netCashSignBtn');
