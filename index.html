@@ -500,7 +500,7 @@
 <header>
   <div class="logo"><img src="VL-thumbnail.png" alt="VL"></div>
   <h1>Cashout Calculator</h1>
-  <span class="version">v2.1</span>
+  <span class="version">v2.2</span>
 </header>
 
 <div class="container">
@@ -902,6 +902,23 @@ document.getElementById('sushiTeamHoursInputs').addEventListener('input', functi
     .map(i => i.value.trim()).filter(n => n);
   document.getElementById('sushiNames').value = names.join(', ');
   syncingNames = false;
+});
+
+// ── HOURS GRID → NAMES reverse sync (missing 4 grids) ────────────────────────
+[
+  { containerId: 'serverSplitHoursInputs',  nameClass: 'server-split-hrs-name' },
+  { containerId: 'splitIncBarHoursInputs',  nameClass: 'split-incbar-hrs-name' },
+  { containerId: 'barSplitHoursInputs',     nameClass: 'bar-split-hrs-name'    },
+  { containerId: 'sushiBarHoursInputs',     nameClass: 'sushi-bar-hrs-name'    },
+].forEach(function({ containerId, nameClass }) {
+  document.getElementById(containerId).addEventListener('input', function (e) {
+    if (syncingNames || !e.target.classList.contains(nameClass)) return;
+    syncingNames = true;
+    const names = Array.from(document.querySelectorAll('.' + nameClass))
+      .map(i => i.value.trim()).filter(n => n);
+    document.getElementById('names').value = names.join(', ');
+    syncingNames = false;
+  });
 });
 
 // ── CALCULATE ─────────────────────────────────────────────────────────────────
